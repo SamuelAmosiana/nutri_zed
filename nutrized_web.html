@@ -1,0 +1,706 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --g1: #2E7D32; --g2: #4CAF50; --g3: #E8F5E9; --g4: #C8E6C9;
+    --b1: #0288D1; --b2: #4FC3F7; --b3: #E1F5FE;
+    --o1: #FFA726; --o2: #FFF3E0;
+    --t1: #212121; --t2: #616161; --t3: #9E9E9E;
+    --bg: #F5F5F5; --card: #FFFFFF; --border: #E0E0E0;
+    --r: 12px; --rs: 8px;
+    --sidebar: 220px;
+  }
+  body { font-family: 'Inter', 'Roboto', sans-serif; background: var(--bg); color: var(--t1); }
+
+  .app { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar { width: var(--sidebar); background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .logo-mark { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--g1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text { font-size: 18px; font-weight: 800; color: var(--g1); letter-spacing: -.3px; }
+  .logo-sub { font-size: 10px; color: var(--t3); font-weight: 500; margin-top: 1px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--rs); cursor: pointer; color: var(--t2); font-size: 13px; font-weight: 500; transition: background .15s, color .15s; border: none; background: none; font-family: inherit; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--bg); color: var(--t1); }
+  .nav-item.active { background: var(--g3); color: var(--g1); font-weight: 700; }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-section-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; padding: 12px 12px 4px; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+  .user-pill { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--rs); }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--g3); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .user-name { font-size: 12px; font-weight: 700; color: var(--t1); }
+  .user-role { font-size: 10px; color: var(--t3); }
+
+  /* ── MAIN CONTENT ── */
+  .main { margin-left: var(--sidebar); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--t1); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-badge { background: var(--o2); color: #E65100; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+  .content-area { flex: 1; padding: 32px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── SHARED COMPONENTS ── */
+  .card { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); padding: 20px; }
+  .label-sm { font-size: 11px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .tag-green { background: var(--g4); color: var(--g1); }
+  .tag-blue { background: var(--b3); color: var(--b1); }
+  .tag-orange { background: var(--o2); color: #E65100; }
+  .btn { display: inline-block; padding: 11px 24px; border-radius: var(--rs); border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--g1); color: #fff; }
+  .btn-secondary { background: var(--g3); color: var(--g1); }
+  .btn-block { display: block; width: 100%; text-align: center; }
+  .input-field { width: 100%; padding: 11px 14px; border-radius: var(--rs); border: 1.5px solid var(--border); font-family: inherit; font-size: 14px; color: var(--t1); background: var(--card); outline: none; transition: border-color .2s; }
+  .input-field:focus { border-color: var(--g2); }
+  .input-group { margin-bottom: 14px; }
+  .input-label { font-size: 13px; font-weight: 600; color: var(--t2); margin-bottom: 6px; display: block; }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+  .section-title { font-size: 20px; font-weight: 800; color: var(--t1); margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: var(--t2); margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .advice-card { background: var(--o2); border-radius: var(--rs); padding: 16px; border-left: 3px solid var(--o1); }
+  .advice-title { font-size: 13px; font-weight: 700; color: #E65100; margin-bottom: 6px; }
+  .advice-text { font-size: 13px; color: var(--t2); line-height: 1.6; }
+
+  /* ── HOME ── */
+  .hero { background: linear-gradient(135deg, var(--g1) 0%, #1B5E20 100%); border-radius: 16px; padding: 40px 48px; color: #fff; position: relative; overflow: hidden; margin-bottom: 24px; }
+  .hero-shape { position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,.06); }
+  .hero-shape2 { position: absolute; right: 80px; bottom: -50px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.05); }
+  .hero-inner { max-width: 560px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.15); border-radius: 20px; padding: 5px 14px; font-size: 12px; margin-bottom: 16px; }
+  .hero h1 { font-size: 36px; font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .hero p { font-size: 15px; opacity: .85; margin-bottom: 28px; line-height: 1.6; max-width: 440px; }
+  .hero-cta { display: flex; gap: 12px; }
+  .hero-pill { padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: transform .1s; }
+  .hero-pill:active { transform: scale(.97); }
+  .hero-pill-primary { background: #fff; color: var(--g1); }
+  .hero-pill-secondary { background: rgba(255,255,255,.2); color: #fff; border: 1.5px solid rgba(255,255,255,.4); }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 4px; }
+  .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px; }
+  .stat-val { font-size: 28px; font-weight: 800; }
+  .stat-label { font-size: 12px; color: var(--t2); }
+  .quick-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; cursor: pointer; transition: border-color .2s, transform .15s; display: flex; flex-direction: column; gap: 8px; }
+  .quick-card:hover { border-color: var(--g2); transform: translateY(-2px); }
+  .quick-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 6px; }
+  .quick-icon-g { background: var(--g3); }
+  .quick-icon-b { background: var(--b3); }
+  .quick-icon-o { background: var(--o2); }
+  .quick-icon-p { background: #F3E5F5; }
+  .quick-card-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+  .quick-card-sub { font-size: 12px; color: var(--t2); }
+  .news-card { background: var(--g1); color: #fff; border-radius: var(--r); padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; }
+  .news-icon { font-size: 32px; }
+  .news-title { font-size: 15px; font-weight: 700; }
+  .news-sub { font-size: 13px; opacity: .8; margin-top: 4px; }
+
+  /* ── BMI ── */
+  .bmi-layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  .bmi-result { border-radius: var(--r); padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .bmi-value { font-size: 64px; font-weight: 800; line-height: 1; }
+  .bmi-category { font-size: 18px; font-weight: 700; }
+  .bmi-sub { font-size: 13px; opacity: .75; text-align: center; }
+  .bmi-scale { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; margin-bottom: 8px; }
+  .bmi-seg { flex: 1; border-radius: 2px; }
+  .bmi-marker-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--t3); margin-bottom: 20px; }
+
+  /* ── DIET ── */
+  .diet-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: start; }
+  .condition-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .cond-tab { padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; background: var(--card); color: var(--t2); transition: all .2s; }
+  .cond-tab.active { background: var(--g1); color: #fff; border-color: var(--g1); }
+  .food-list { display: flex; flex-direction: column; gap: 8px; }
+  .food-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--rs); background: var(--bg); }
+  .food-icon-wrap { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; background: var(--g3); }
+  .avoid-item .food-icon-wrap { background: #FFEBEE; }
+  .food-name { font-size: 13px; font-weight: 600; color: var(--t1); }
+  .food-detail { font-size: 11px; color: var(--t2); }
+  .meal-plan-card { background: var(--g3); border-radius: var(--rs); padding: 16px; }
+  .meal-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--g4); }
+  .meal-row:last-child { border-bottom: none; }
+  .meal-time { font-size: 11px; font-weight: 700; color: var(--g1); }
+  .meal-food { font-size: 13px; color: var(--t1); }
+
+  /* ── MEAL PLANNER ── */
+  .planner-layout { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
+  .food-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 12px; }
+  .food-tag { padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; background: var(--card); color: var(--t2); transition: all .2s; }
+  .food-tag.selected { background: var(--g1); color: #fff; border-color: var(--g1); }
+  .meal-output { display: none; flex-direction: column; gap: 16px; }
+  .meal-output.show { display: flex; }
+  .nutrient-bar { margin-bottom: 14px; }
+  .nutrient-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .nutrient-label { font-size: 12px; color: var(--t2); font-weight: 600; }
+  .nutrient-val { font-size: 12px; color: var(--t1); font-weight: 700; }
+
+  /* ── CHILD ── */
+  .child-layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  .growth-chart { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); padding: 20px; }
+  .growth-svg { width: 100%; }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+  .status-normal { background: var(--g3); color: var(--g1); }
+  .status-risk { background: #FFEBEE; color: #C62828; }
+
+  /* ── FOOD DB ── */
+  .search-wrap { position: relative; margin-bottom: 20px; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .search-input { width: 100%; max-width: 400px; padding: 12px 14px 12px 44px; border-radius: var(--rs); border: 1.5px solid var(--border); font-family: inherit; font-size: 14px; outline: none; background: var(--card); transition: border-color .2s; }
+  .search-input:focus { border-color: var(--g2); }
+  .db-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .db-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 16px; cursor: pointer; transition: border-color .2s, transform .15s; }
+  .db-card:hover { border-color: var(--g2); transform: translateY(-2px); }
+  .db-emoji { font-size: 36px; margin-bottom: 10px; display: block; }
+  .db-name { font-size: 13px; font-weight: 700; color: var(--t1); margin-bottom: 5px; }
+  .db-benefit { font-size: 11px; color: var(--t2); line-height: 1.5; }
+  .db-nutrient { font-size: 10px; font-weight: 700; color: var(--b1); margin-top: 8px; }
+</style>
+
+<div class="app" id="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🥗</div>
+        <div>
+          <div class="logo-text">NutriZed</div>
+          <div class="logo-sub">Zambia Nutrition Platform</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active" onclick="navTo('s-home', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>
+        Home
+      </button>
+      <button class="nav-item" onclick="navTo('s-bmi', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        BMI Calculator
+      </button>
+      <button class="nav-item" onclick="navTo('s-diet', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        Diet Guidance
+      </button>
+      <button class="nav-item" onclick="navTo('s-planner', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Meal Planner
+      </button>
+      <button class="nav-item" onclick="navTo('s-child', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Child Tracker
+      </button>
+      <div class="nav-section-label">Resources</div>
+      <button class="nav-item" onclick="navTo('s-food', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+        Food Database
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">👤</div>
+        <div>
+          <div class="user-name">My Profile</div>
+          <div class="user-role">Set up your profile</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Home</div>
+      <div class="topbar-right">
+        <div class="topbar-badge">🔔 7-Day Streak</div>
+        <div style="font-size:12px;color:var(--t2);">Lusaka, Zambia</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- ═══ HOME ═══ -->
+      <div class="screen active" id="s-home">
+        <div class="hero">
+          <div class="hero-shape"></div><div class="hero-shape2"></div>
+          <div class="hero-inner">
+            <div class="hero-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#fff"/></svg>
+              Zambia's Nutrition Platform
+            </div>
+            <h1>Eat Smart.<br>Live Healthy.</h1>
+            <p>Personalised nutrition guidance using locally available, affordable foods for every Zambian family.</p>
+            <div class="hero-cta">
+              <button class="hero-pill hero-pill-primary" onclick="navToById('s-bmi')">Calculate BMI</button>
+              <button class="hero-pill hero-pill-secondary" onclick="navToById('s-planner')">Plan My Meals</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:28px;">
+          <div class="label-sm">Your Dashboard</div>
+          <div class="grid-4">
+            <div class="stat-card">
+              <div class="stat-icon quick-icon-g">⚖️</div>
+              <div class="stat-val" style="color:var(--g1);">—</div>
+              <div class="stat-label">BMI Score</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon quick-icon-b">🍽</div>
+              <div class="stat-val" style="color:var(--b1);">3</div>
+              <div class="stat-label">Meals Logged Today</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon quick-icon-o">🔥</div>
+              <div class="stat-val" style="color:var(--o1);">7</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon quick-icon-p">👶</div>
+              <div class="stat-val" style="color:#8E24AA;">—</div>
+              <div class="stat-label">Child Growth Status</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:28px;">
+          <div class="label-sm">Quick Actions</div>
+          <div class="grid-4">
+            <div class="quick-card" onclick="navToById('s-bmi')">
+              <div class="quick-icon quick-icon-g">⚖️</div>
+              <div class="quick-card-title">BMI Calculator</div>
+              <div class="quick-card-sub">Check your health index instantly</div>
+            </div>
+            <div class="quick-card" onclick="navToById('s-diet')">
+              <div class="quick-icon quick-icon-b">🥗</div>
+              <div class="quick-card-title">Diet Guidance</div>
+              <div class="quick-card-sub">Condition-based meal advice</div>
+            </div>
+            <div class="quick-card" onclick="navToById('s-planner')">
+              <div class="quick-icon quick-icon-o">🍲</div>
+              <div class="quick-card-title">Meal Planner</div>
+              <div class="quick-card-sub">Affordable local meal ideas</div>
+            </div>
+            <div class="quick-card" onclick="navToById('s-child')">
+              <div class="quick-icon quick-icon-p">👶</div>
+              <div class="quick-card-title">Child Growth Tracker</div>
+              <div class="quick-card-sub">Monitor nutritional milestones</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="label-sm">Today's Tip</div>
+            <div class="news-card">
+              <div class="news-icon">💡</div>
+              <div>
+                <div class="news-title">Add kapenta to your meals!</div>
+                <div class="news-sub">High in calcium & protein. Just 250g weekly meets 40% of your daily calcium needs. Available at most local markets.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="label-sm">Nutrition Highlight</div>
+            <div class="card" style="height:100%;display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🇿🇲 Local Superfoods</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:var(--rs);">
+                  <span style="font-size:22px;">🫘</span><div><div style="font-size:13px;font-weight:600;">Beans (Nyemba)</div><div style="font-size:11px;color:var(--t2);">Protein · Iron · Folate</div></div><span class="tag tag-green" style="margin-left:auto;">Top pick</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:var(--rs);">
+                  <span style="font-size:22px;">🍠</span><div><div style="font-size:13px;font-weight:600;">Sweet Potato</div><div style="font-size:11px;color:var(--t2);">Vitamin A · Fibre</div></div><span class="tag tag-blue" style="margin-left:auto;">Seasonal</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:var(--rs);">
+                  <span style="font-size:22px;">🥬</span><div><div style="font-size:13px;font-weight:600;">Rape Leaves</div><div style="font-size:11px;color:var(--t2);">Iron · Calcium · C</div></div><span class="tag tag-orange" style="margin-left:auto;">Affordable</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ BMI ═══ -->
+      <div class="screen" id="s-bmi">
+        <div class="section-title">BMI Calculator</div>
+        <div class="section-sub">Calculate your Body Mass Index and get personalised health advice</div>
+        <div class="bmi-layout">
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="input-group">
+                <label class="input-label">Height (cm)</label>
+                <input type="number" class="input-field" id="bmi-h" placeholder="e.g. 165" min="50" max="250">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Weight (kg)</label>
+                <input type="number" class="input-field" id="bmi-w" placeholder="e.g. 65" min="10" max="300">
+              </div>
+              <div class="input-group" style="margin-bottom:0;">
+                <label class="input-label">Age (years)</label>
+                <input type="number" class="input-field" id="bmi-a" placeholder="e.g. 28" min="1" max="120">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="calcBMI()">Calculate BMI</button>
+          </div>
+          <div id="bmi-output" style="display:none;">
+            <div class="bmi-result card" id="bmi-result-box" style="padding:28px;margin-bottom:16px;">
+              <div class="bmi-value" id="bmi-num">—</div>
+              <div class="bmi-category" id="bmi-cat">—</div>
+              <div class="bmi-sub" id="bmi-desc">—</div>
+            </div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="label-sm">BMI Scale</div>
+              <div class="bmi-scale">
+                <div class="bmi-seg" style="background:#42A5F5;flex:2;"></div>
+                <div class="bmi-seg" style="background:#66BB6A;flex:2;"></div>
+                <div class="bmi-seg" style="background:#FFA726;flex:2;"></div>
+                <div class="bmi-seg" style="background:#EF5350;flex:2;"></div>
+              </div>
+              <div class="bmi-marker-row">
+                <span>&lt;18.5<br>Underweight</span><span>18.5–24.9<br>Normal</span><span>25–29.9<br>Overweight</span><span>≥30<br>Obese</span>
+              </div>
+            </div>
+            <div class="advice-card">
+              <div class="advice-title">Recommendation</div>
+              <div class="advice-text" id="adv-text">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ DIET ═══ -->
+      <div class="screen" id="s-diet">
+        <div class="section-title">Diet Guidance</div>
+        <div class="section-sub">Personalised food recommendations based on your health condition</div>
+        <div class="condition-tabs">
+          <button class="cond-tab active" onclick="switchCond(this,'diabetes')">Diabetes</button>
+          <button class="cond-tab" onclick="switchCond(this,'hypertension')">Hypertension</button>
+          <button class="cond-tab" onclick="switchCond(this,'general')">General Health</button>
+          <button class="cond-tab" onclick="switchCond(this,'pregnancy')">Pregnancy</button>
+        </div>
+        <div class="diet-layout">
+          <div>
+            <div class="label-sm" style="color:var(--g1);">✅ Recommended Foods</div>
+            <div class="card" style="padding:14px;"><div class="food-list" id="rec-list"></div></div>
+          </div>
+          <div>
+            <div class="label-sm" style="color:#C62828;">🚫 Foods to Avoid</div>
+            <div class="card" style="padding:14px;margin-bottom:16px;"><div class="food-list avoid-item" id="avoid-list"></div></div>
+          </div>
+          <div>
+            <div class="label-sm">📅 Sample Meal Plan</div>
+            <div class="meal-plan-card"><div id="meal-plan"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MEAL PLANNER ═══ -->
+      <div class="screen" id="s-planner">
+        <div class="section-title">Affordable Meal Planner</div>
+        <div class="section-sub">Select foods you have available and generate a balanced meal suggestion</div>
+        <div class="planner-layout">
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="label-sm">Available Foods — tap to select</div>
+              <div class="food-tags">
+                <div class="food-tag" onclick="toggleTag(this)">🌽 Maize</div>
+                <div class="food-tag" onclick="toggleTag(this)">🫘 Beans</div>
+                <div class="food-tag" onclick="toggleTag(this)">🐟 Kapenta</div>
+                <div class="food-tag" onclick="toggleTag(this)">🍠 Sweet Potato</div>
+                <div class="food-tag" onclick="toggleTag(this)">🥬 Rape</div>
+                <div class="food-tag" onclick="toggleTag(this)">🥚 Eggs</div>
+                <div class="food-tag" onclick="toggleTag(this)">🥜 Groundnuts</div>
+                <div class="food-tag" onclick="toggleTag(this)">🫚 Cassava</div>
+                <div class="food-tag" onclick="toggleTag(this)">🍗 Chicken</div>
+                <div class="food-tag" onclick="toggleTag(this)">🥛 Milk</div>
+                <div class="food-tag" onclick="toggleTag(this)">🍋 Lemon</div>
+                <div class="food-tag" onclick="toggleTag(this)">🍌 Banana</div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="generateMeal()">Generate Balanced Meal</button>
+          </div>
+          <div class="meal-output" id="meal-out">
+            <div class="card">
+              <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--g1);">🍽 Suggested Balanced Meal</div>
+              <div id="meal-suggestion" style="font-size:14px;color:var(--t1);line-height:1.7;"></div>
+            </div>
+            <div class="card">
+              <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Nutritional Breakdown</div>
+              <div id="nutrient-breakdown"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CHILD ═══ -->
+      <div class="screen" id="s-child">
+        <div class="section-title">Child Growth Tracker</div>
+        <div class="section-sub">Monitor your child's nutritional health against WHO growth standards</div>
+        <div class="child-layout">
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="input-group">
+                <label class="input-label">Child's Age (months)</label>
+                <input type="number" class="input-field" id="ch-age" placeholder="e.g. 24" min="0" max="60">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Height (cm)</label>
+                <input type="number" class="input-field" id="ch-h" placeholder="e.g. 85" min="30" max="130">
+              </div>
+              <div class="input-group" style="margin-bottom:0;">
+                <label class="input-label">Weight (kg)</label>
+                <input type="number" class="input-field" id="ch-w" placeholder="e.g. 12" min="1" max="30">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="checkChild()">Check Growth Status</button>
+          </div>
+          <div id="child-out" style="display:none;">
+            <div class="growth-chart" style="margin-bottom:16px;">
+              <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Growth Chart — WHO Standards</div>
+              <svg class="growth-svg" viewBox="0 0 520 180" id="growth-svg">
+                <rect x="0" y="0" width="520" height="180" fill="none"/>
+                <line x1="50" y1="20" x2="50" y2="145" stroke="#E0E0E0" stroke-width="0.5"/>
+                <line x1="50" y1="145" x2="500" y2="145" stroke="#E0E0E0" stroke-width="0.5"/>
+                <rect x="50" y="75" width="450" height="40" fill="#E8F5E9" opacity="0.8"/>
+                <rect x="50" y="40" width="450" height="35" fill="#FFF3E0" opacity="0.7"/>
+                <rect x="50" y="115" width="450" height="30" fill="#FFF3E0" opacity="0.7"/>
+                <text x="44" y="56" text-anchor="end" font-size="9" fill="#9E9E9E">+2SD</text>
+                <text x="44" y="98" text-anchor="end" font-size="9" fill="#4CAF50">0</text>
+                <text x="44" y="128" text-anchor="end" font-size="9" fill="#9E9E9E">-2SD</text>
+                <path d="M50 94 Q160 90 280 87 Q380 84 500 80" fill="none" stroke="#4CAF50" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <circle id="child-dot" cx="280" cy="94" r="7" fill="#2E7D32"/>
+                <text id="child-dot-label" x="280" y="76" text-anchor="middle" font-size="9" fill="#2E7D32" font-weight="bold">Your child</text>
+                <text x="50" y="163" font-size="9" fill="#9E9E9E">0m</text>
+                <text x="155" y="163" font-size="9" fill="#9E9E9E">12m</text>
+                <text x="270" y="163" font-size="9" fill="#9E9E9E">24m</text>
+                <text x="380" y="163" font-size="9" fill="#9E9E9E">36m</text>
+                <text x="480" y="163" font-size="9" fill="#9E9E9E">60m</text>
+              </svg>
+              <div style="display:flex;gap:16px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);"><div style="width:14px;height:7px;background:#E8F5E9;border-radius:2px;"></div>Normal range</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);"><div style="width:14px;height:7px;background:#FFF3E0;border-radius:2px;"></div>Monitor zone</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);"><div style="width:3px;height:14px;background:#4CAF50;border-radius:2px;"></div>WHO Median</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+              <div class="status-pill" id="child-status-pill">—</div>
+              <div style="font-size:13px;color:var(--t2);" id="child-waz">Weight-for-age: —</div>
+            </div>
+            <div class="advice-card">
+              <div class="advice-title">Nutritional Advice</div>
+              <div class="advice-text" id="child-adv-text">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ FOOD DB ═══ -->
+      <div class="screen" id="s-food">
+        <div class="section-title">Food Database</div>
+        <div class="section-sub">Local Zambian foods and their nutritional benefits</div>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="food-search" placeholder="Search foods, nutrients..." oninput="filterFoods(this.value)">
+        </div>
+        <div class="db-grid" id="food-grid"></div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const screens = document.querySelectorAll('.screen');
+const navItems = document.querySelectorAll('.nav-item');
+const titles = { 'sHome':'Home','sBmi':'BMI Calculator','sDiet':'Diet Guidance','sPlanner':'Meal Planner','sChild':'Child Tracker','sFood':'Food Database' };
+
+function navTo(id, btn) {
+  screens.forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  navItems.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const key = id.replace('-','').replace(/^s(.)/,(_,c)=>'s'+c.toUpperCase());
+  const labelMap = {'s-home':'Home','s-bmi':'BMI Calculator','s-diet':'Diet Guidance','s-planner':'Meal Planner','s-child':'Child Tracker','s-food':'Food Database'};
+  document.getElementById('topbar-title').textContent = labelMap[id] || 'NutriZed';
+}
+function navToById(id) {
+  screens.forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const labelMap = {'s-home':'Home','s-bmi':'BMI Calculator','s-diet':'Diet Guidance','s-planner':'Meal Planner','s-child':'Child Tracker','s-food':'Food Database'};
+  navItems.forEach(b => b.classList.remove('active'));
+  document.getElementById('topbar-title').textContent = labelMap[id] || '';
+}
+
+/* BMI */
+function calcBMI() {
+  const h = parseFloat(document.getElementById('bmi-h').value);
+  const w = parseFloat(document.getElementById('bmi-w').value);
+  if (!h || !w || h < 50 || h > 250 || w < 10 || w > 300) return;
+  const bmi = w / ((h/100)**2);
+  const val = bmi.toFixed(1);
+  document.getElementById('bmi-num').textContent = val;
+  const box = document.getElementById('bmi-result-box');
+  let cat, desc, bg, col, adv;
+  if (bmi < 18.5) {
+    cat='Underweight'; bg='#E3F2FD'; col='#1565C0';
+    desc='Your BMI is below the healthy range';
+    adv='Increase caloric intake with nutrient-rich local foods such as groundnuts, beans, cassava, eggs, and fortified porridge. Aim for 3 balanced meals daily.';
+  } else if (bmi < 25) {
+    cat='Normal Weight'; bg='#E8F5E9'; col='#2E7D32';
+    desc='You are in the healthy weight range';
+    adv='Maintain your healthy weight with balanced nshima-based meals, vegetables like rape and bondwe, and protein from kapenta or beans.';
+  } else if (bmi < 30) {
+    cat='Overweight'; bg='#FFF3E0'; col='#E65100';
+    desc='Your BMI is slightly above normal';
+    adv='Reduce refined sugars and fried foods. Increase vegetable portions and try replacing some nshima servings with sweet potato or brown rice.';
+  } else {
+    cat='Obese'; bg='#FFEBEE'; col='#C62828';
+    desc='Please consult a healthcare provider';
+    adv='Speak with a local health worker or clinic. Focus on smaller portions, more vegetables, and reducing oils and sugary drinks.';
+  }
+  box.style.background = bg;
+  document.getElementById('bmi-cat').style.color = col;
+  document.getElementById('bmi-cat').textContent = cat;
+  document.getElementById('bmi-num').style.color = col;
+  document.getElementById('bmi-desc').textContent = desc;
+  document.getElementById('adv-text').textContent = adv;
+  document.getElementById('bmi-output').style.display = 'block';
+}
+
+/* DIET */
+const dietData = {
+  diabetes: {
+    rec:[{e:'🫘',n:'Beans & Lentils',d:'Low glycemic, high fibre'},{e:'🥬',n:'Rape / Bondwe',d:'Non-starchy vegetables'},{e:'🐟',n:'Kapenta',d:'Lean protein, no added sugar'},{e:'🥚',n:'Eggs',d:'Protein without carbs'}],
+    avoid:[{e:'🍬',n:'Sugar & Sweets',d:'Spikes blood glucose rapidly'},{e:'🍞',n:'White bread / Buns',d:'High GI, avoid refined carbs'}],
+    meals:[{t:'Breakfast',f:'Egg + boiled sweet potato'},{t:'Lunch',f:'Nshima (small) + beans + rape'},{t:'Dinner',f:'Kapenta stew + cassava leaves'}]
+  },
+  hypertension:{
+    rec:[{e:'🍌',n:'Banana',d:'High potassium, lowers BP'},{e:'🧄',n:'Garlic',d:'Natural blood pressure reducer'},{e:'🫘',n:'Beans',d:'Fibre & potassium rich'},{e:'🥬',n:'Dark greens',d:'Magnesium-rich vegetables'}],
+    avoid:[{e:'🧂',n:'Salt / Salty relish',d:'Raises blood pressure directly'},{e:'🥩',n:'Processed meats',d:'High sodium content'}],
+    meals:[{t:'Breakfast',f:'Oatmeal porridge + banana'},{t:'Lunch',f:'Beans + green vegetables + less salt'},{t:'Dinner',f:'Grilled fish + boiled cassava'}]
+  },
+  general:{
+    rec:[{e:'🌽',n:'Maize (nshima)',d:'Energy staple, B vitamins'},{e:'🥜',n:'Groundnuts',d:'Healthy fats & protein'},{e:'🍠',n:'Sweet Potato',d:'Vitamin A, fibre'},{e:'🐟',n:'Kapenta',d:'Calcium & omega-3'}],
+    avoid:[{e:'🥤',n:'Sugary drinks',d:'Empty calories, no nutrients'},{e:'🍟',n:'Deep fried foods',d:'Unhealthy trans fats'}],
+    meals:[{t:'Breakfast',f:'Porridge + groundnut powder'},{t:'Lunch',f:'Nshima + kapenta + boiled rape'},{t:'Dinner',f:'Sweet potato + bean relish'}]
+  },
+  pregnancy:{
+    rec:[{e:'🥚',n:'Eggs',d:'Protein & choline for baby brain'},{e:'🥛',n:'Milk / Maheu',d:'Calcium for bone development'},{e:'🍠',n:'Sweet Potato',d:'Folate & vitamin A'},{e:'🫘',n:'Beans',d:'Iron & protein for blood health'}],
+    avoid:[{e:'🍺',n:'Alcohol',d:'Harmful to foetal development'},{e:'🥩',n:'Raw/undercooked meat',d:'Risk of listeria & toxoplasma'}],
+    meals:[{t:'Breakfast',f:'Egg + fortified porridge + milk'},{t:'Lunch',f:'Beans + rape + sweet potato'},{t:'Dinner',f:'Fish stew + nshima + fruits'}]
+  }
+};
+function switchCond(tab, cond) {
+  document.querySelectorAll('.cond-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderDiet(cond);
+}
+function renderDiet(cond) {
+  const d = dietData[cond];
+  document.getElementById('rec-list').innerHTML = d.rec.map(f=>`<div class="food-item"><div class="food-icon-wrap">${f.e}</div><div><div class="food-name">${f.n}</div><div class="food-detail">${f.d}</div></div></div>`).join('');
+  document.getElementById('avoid-list').innerHTML = d.avoid.map(f=>`<div class="food-item avoid-item"><div class="food-icon-wrap" style="background:#FFEBEE;">${f.e}</div><div><div class="food-name">${f.n}</div><div class="food-detail">${f.d}</div></div></div>`).join('');
+  document.getElementById('meal-plan').innerHTML = d.meals.map(m=>`<div class="meal-row"><span class="meal-time">${m.t}</span><span class="meal-food">${m.f}</span></div>`).join('');
+}
+renderDiet('diabetes');
+
+/* MEAL PLANNER */
+function toggleTag(el) { el.classList.toggle('selected'); }
+function generateMeal() {
+  const selected = [...document.querySelectorAll('.food-tag.selected')].map(t=>t.textContent.trim().replace(/^[^\w]+/,''));
+  if (selected.length < 3) { alert('Please select at least 3 foods'); return; }
+  const protein = selected.find(s=>['Kapenta','Beans','Eggs','Chicken','Groundnuts'].some(p=>s.includes(p)))||selected[0];
+  const carb = selected.find(s=>['Maize','Sweet Potato','Cassava'].some(c=>s.includes(c)))||selected[1];
+  const veg = selected.find(s=>['Rape','Lemon'].some(v=>s.includes(v)))||selected[2];
+  document.getElementById('meal-suggestion').innerHTML = `
+    <b>🌿 Balanced Plate:</b><br>
+    ½ plate — ${veg||'Green vegetables'} (steamed, minimal oil)<br>
+    ¼ plate — ${carb||'Nshima'} (energy source)<br>
+    ¼ plate — ${protein||'Kapenta'} (protein source)<br><br>
+    <span style="color:var(--t2);font-size:12px;">Estimated cost: K8–K15 per serving using local market prices</span>
+  `;
+  const nutrients = [
+    {n:'Calories',v:'420 kcal',pct:70,c:'#4CAF50'},
+    {n:'Protein',v:'18g',pct:55,c:'#0288D1'},
+    {n:'Carbohydrates',v:'58g',pct:75,c:'#FFA726'},
+    {n:'Iron',v:'4.2mg',pct:40,c:'#EF5350'},
+    {n:'Vitamin A',v:'320μg',pct:65,c:'#AB47BC'},
+  ];
+  document.getElementById('nutrient-breakdown').innerHTML = nutrients.map(n=>`
+    <div class="nutrient-bar">
+      <div class="nutrient-row"><span class="nutrient-label">${n.n}</span><span class="nutrient-val">${n.v}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${n.pct}%;background:${n.c};"></div></div>
+    </div>`).join('');
+  document.getElementById('meal-out').classList.add('show');
+}
+
+/* CHILD */
+function checkChild() {
+  const age = parseFloat(document.getElementById('ch-age').value);
+  const w = parseFloat(document.getElementById('ch-w').value);
+  if (!age || !w) return;
+  const expectedW = 3.5 + (age * 0.3);
+  const diff = w - expectedW;
+  const cx = Math.min(Math.max(50 + (age/60)*450, 70), 490);
+  let cy, status, statusClass, adv;
+  if (diff > 1.5) {
+    cy=45; status='⚠ Overweight Risk'; statusClass='status-risk';
+    adv='Reduce high-fat foods and increase physical activity. Consult a health worker for personalised guidance.';
+  } else if (diff > -1.5) {
+    cy=94; status='✅ Normal Growth'; statusClass='status-normal';
+    adv='Continue with balanced meals: nshima, beans, eggs, rape, and kapenta. Breastfeed if under 2 years.';
+  } else if (diff > -3) {
+    cy=115; status='⚠ Underweight Risk'; statusClass='status-risk';
+    adv='Increase nutrient-dense foods: groundnut paste, eggs, maheu. Visit a clinic for growth monitoring.';
+  } else {
+    cy=135; status='🚨 Severe Risk'; statusClass='status-risk';
+    adv='Please visit your nearest health clinic or hospital urgently. Child may need therapeutic feeding support.';
+  }
+  document.getElementById('child-dot').setAttribute('cx', cx);
+  document.getElementById('child-dot').setAttribute('cy', cy);
+  document.getElementById('child-dot-label').setAttribute('x', cx);
+  document.getElementById('child-dot-label').setAttribute('y', cy - 12);
+  const pill = document.getElementById('child-status-pill');
+  pill.textContent = status; pill.className = 'status-pill ' + statusClass;
+  document.getElementById('child-waz').textContent = `Weight-for-age: ${diff>0?'+':''}${diff.toFixed(1)} kg vs WHO median`;
+  document.getElementById('child-adv-text').textContent = adv;
+  document.getElementById('child-out').style.display = 'block';
+}
+
+/* FOOD DB */
+const foods = [
+  {e:'🌽',n:'Maize (Nshima)',b:'Main energy source, B vitamins, fibre',nut:'Carbs · B1 · Fibre'},
+  {e:'🐟',n:'Kapenta',b:'Tiny fish, rich in calcium & omega-3',nut:'Calcium · Omega-3 · Protein'},
+  {e:'🫘',n:'Beans (Nyemba)',b:'Plant protein, iron, folate-rich',nut:'Protein · Iron · Folate'},
+  {e:'🍠',n:'Sweet Potato',b:'Vitamin A for eye & immune health',nut:'Vitamin A · Fibre · C'},
+  {e:'🥬',n:'Rape Leaves',b:'Iron, calcium, vitamins A & C',nut:'Iron · Calcium · Vitamin C'},
+  {e:'🥜',n:'Groundnuts',b:'Healthy fats, protein, vitamin E',nut:'Healthy Fats · Protein · E'},
+  {e:'🫚',n:'Cassava',b:'Starchy root, energy & fibre source',nut:'Carbs · Fibre · Vitamin C'},
+  {e:'🥚',n:'Eggs',b:'Complete protein, choline, vitamin D',nut:'Protein · Choline · D'},
+  {e:'🥛',n:'Milk / Maheu',b:'Calcium, protein, probiotics',nut:'Calcium · B12 · Protein'},
+  {e:'🍌',n:'Banana',b:'Potassium, energy, B6 vitamin',nut:'Potassium · B6 · Carbs'},
+  {e:'🧅',n:'Onion',b:'Antioxidants, prebiotic fibre',nut:'Quercetin · Fibre · C'},
+  {e:'🍅',n:'Tomato',b:'Lycopene, vitamin C, low calorie',nut:'Lycopene · Vitamin C · K'},
+];
+function renderFoods(list) {
+  document.getElementById('food-grid').innerHTML = list.map(f=>`
+    <div class="db-card">
+      <span class="db-emoji">${f.e}</span>
+      <div class="db-name">${f.n}</div>
+      <div class="db-benefit">${f.b}</div>
+      <div class="db-nutrient">${f.nut}</div>
+    </div>`).join('');
+}
+function filterFoods(q) {
+  renderFoods(foods.filter(f=>f.n.toLowerCase().includes(q.toLowerCase())||f.b.toLowerCase().includes(q.toLowerCase())));
+}
+renderFoods(foods);
+</script>
